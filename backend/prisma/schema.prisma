@@ -1,0 +1,202 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Language {
+  CPP
+  PYTHON
+  JAVA
+  JAVASCRIPT  
+}
+
+enum Verdict {
+  PENDING
+  ACCEPTED
+  WRONG_ANSWER
+  TIME_LIMIT_EXCEEDED
+  MEMORY_LIMIT_EXCEEDED
+  RUNTIME_ERROR
+  COMPILATION_ERROR
+}
+
+enum UserRank {
+  NEWBIE
+  PUPIL
+  SPECIALIST
+  EXPERT
+  CANDIDATE_MASTER
+  MASTER
+  GRANDMASTER
+}
+
+
+enum ContestType {
+  ICPC
+  CF
+}
+
+model User {
+  id                  Int           @id @default(autoincrement())
+  username            String        @unique
+  email               String        @unique
+  passwordHash         String          
+  rating              Int           @default(1500)
+  rank                UserRank      @default(NEWBIE)
+  createdAt           DateTime      @default(now())
+  maxRating           Int            @default(1500)
+  country     String?
+  avatar      String?
+
+
+  submissions         Submission[]
+  contestRegistration ContestRegistration[]
+  ratingChanges       RatingChange[]
+  authoredProblems    Problem[]     @relation("ProblemAuthor")
+  createdContest      Contest[]
+
+}
+
+model Problem{
+  id                  Int       @id @default(autoincrement())
+  code                String    @unique
+  title               String    
+  statement           String
+  inputFormat         String
+  outputFormat        String
+  notes               String?
+  timeLimit           Int
+  memoryLimit         Int
+  difficulty          Int
+  authorId            Int
+  createdAt           DateTime  @default(now())
+  isPublic            Boolean    @default(false)
+
+
+  author               User     @relation("ProblemAuthor",fields:[authorId],references: [id])
+  tags                ProblemTag[]
+  testCases           TestCase[]
+  submissions         Submission[]
+  contestProblems     ContestProblem[]
+
+}
+
+model Tag{
+  id        Int   @id  @default(autoincrement())
+  name      String @unique
+  problems ProblemTag[]
+
+}
+
+
+model ProblemTag{
+  problemId       Int
+  tagId           Int
+  problem         Problem     @relation(fields: [problemId], references: [id], onDelete:Cascade)
+  tag             Tag         @relation(fields: [tagId], references: [id], onDelete:Cascade)
+
+  @@id([problemId,tagId])
+}
+
+model TestCase{
+  id               Int   @id @default(autoincrement())
+  problemId        Int
+  input            String
+  expectedOutput   String
+  isSample         Boolean     @default(false)
+  orderIndex       Int
+
+  problem   Problem @relation(fields:[problemId],references:[id],onDelete:Cascade)
+
+  @@index([problemId,orderIndex])
+}
+
+model Submission{
+  id              Int   @id @default(autoincrement())
+  userId          Int
+  problemId       Int 
+  contestId       Int?
+  code            String
+  language        Language
+  verdict         Verdict   @default(PENDING)
+  timeUsed        Int?
+  memoryUsed      Int?
+  failedTest     Int?
+  submittedAt     DateTime    @default(now())
+
+  user      User  @relation(fields:[userId], references:[id])
+  problem   Problem @relation(fields: [problemId],references: [id])
+  contest   Contest?  @relation(fields: [contestId],references: [id])
+
+  @@index([userId])
+  @@index([problemId])
+  @@index([contestId])
+}
+
+model Contest{
+  id            Int         @id @default(autoincrement())
+  title         String
+  description   String
+  startTime     DateTime
+  endTime       DateTime
+  type          ContestType   @default(ICPC)
+  createdById    Int
+  createdAt     DateTime      @default(now())
+
+  createdby    User     @relation(fields: [createdById],references: [id])
+  problems        ContestProblem[]
+  registrations   ContestRegistration[]
+  submissions     Submission[]
+  ratingChanges   RatingChange[]
+
+}
+
+model ContestProblem{
+  contestId    Int
+  problemId   Int
+  label       String
+  orderIndex    Int
+
+  contest   Contest  @relation(fields: [contestId],references: [id],onDelete: Cascade)
+  problem   Problem   @relation(fields: [problemId],references: [id],onDelete: Cascade)
+
+  @@id([contestId, problemId])
+  @@index([contestId, orderIndex])
+}
+
+model ContestRegistration{
+  contestId             Int
+  userId                Int
+  registration          DateTime    @default(now())
+
+
+  contest      Contest  @relation(fields: [contestId],references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId],references: [id], onDelete: Cascade)
+
+  @@id([contestId,userId])
+}
+
+model RatingChange{
+  id      Int     @id @default(autoincrement())
+  userId   Int
+  contestId Int
+  oldRating   Int
+  newRating   Int
+  rank      Int
+  createdAt    DateTime @default(now())
+
+  user  User  @relation(fields: [userId],references:[id])
+  contest Contest   @relation(fields: [contestId],references: [id])
+
+  @@unique([userId,contestId])
+}
