@@ -1,6 +1,17 @@
-import  express  from "express";
+import  express, { Router }  from "express";
 import cors from 'cors'
-import morgran from 'morgan'
+import morgan from 'morgan'
 import 'dotenv/config'
 
-import authRoutes
+import authRoutes from './routes/auth.js'
+
+const app = express();
+
+app.use(express.json())
+app.use(morgan('dev'))
+
+app.use('/api/auth',authRoutes)
+
+
+
+app.listen(3000);
