@@ -36,9 +36,10 @@ router.get("/:id", async (req,res)=>{
     res.status(404).json({error:"contest not found"})
     return
   }
+  res.json(contest)
 })
 
-router.post("/", async (req,res)=>{
+router.post("/", authMiddleware, async (req,res)=>{
   const {title,description,startTime,endTime,type} = req.body
 
   if(!title || !startTime || !endTime){
@@ -61,7 +62,7 @@ router.post("/", async (req,res)=>{
       startTime:new Date(startTime),
       endTime: new Date(endTime),
       type: type ?? 'ICPC',
-      createdById:req.userId
+      createdById:req.userId!
     },
   })
   res.status(201).json(contest)
@@ -77,7 +78,7 @@ router.post("/:id/register",authMiddleware, async (req,res)=>{
     where:  { id: contestId}
   })
   if(!contest){
-    res.status(400).json({error:"Contest not found"})
+    res.status(404).json({error:"Contest not found"})
     return
   }
 
@@ -120,6 +121,7 @@ router.get("/:id/standings",async (req,res)=>{
 
   if(!contest){
     res.status(404).json({error:"contest not found"})
+    return
   }
 
   const standing = registeration.map((reg)=>{
@@ -127,7 +129,7 @@ router.get("/:id/standings",async (req,res)=>{
     const solved = userSubs.length
     const penalty =userSubs.reduce((total,s)=>{
       const minutes=Math.floor(
-        s.submittedAt.getTime() - contest.startTime.getTime()
+        (s.submittedAt.getTime() - contest.startTime.getTime()) / 60000
       )
       return total + minutes
     },0)
@@ -139,5 +141,42 @@ router.get("/:id/standings",async (req,res)=>{
 })
 
  
+
+// POST /:id/problems — add a problem to a contest (protected)
+router.post('/:id/problems', authMiddleware, async (req, res) => {
+  const contestId = parseInt(req.params.id as string)
+  const { problemCode, label, orderIndex } = req.body
+
+  if (!problemCode || !label || orderIndex === undefined) {
+    res.status(400).json({ error: 'problemCode, label and orderIndex are required' })
+    return
+  }
+
+  const contest = await prisma.contest.findUnique({ where: { id: contestId } })
+  if (!contest) {
+    res.status(404).json({ error: 'Contest not found' })
+    return
+  }
+
+  const problem = await prisma.problem.findUnique({ where: { code: problemCode } })
+  if (!problem) {
+    res.status(404).json({ error: 'Problem not found' })
+    return
+  }
+
+  const existing = await prisma.contestProblem.findUnique({
+    where: { contestId_problemId: { contestId, problemId: problem.id } },
+  })
+  if (existing) {
+    res.status(409).json({ error: 'Problem already in contest' })
+    return
+  }
+
+  const contestProblem = await prisma.contestProblem.create({
+    data: { contestId, problemId: problem.id, label, orderIndex },
+  })
+
+  res.status(201).json(contestProblem)
+})
 
 export default router
