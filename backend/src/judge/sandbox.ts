@@ -8,7 +8,7 @@ const ISOLATE = '/usr/local/bin/isolate'
 
 export interface SandboxResult {
   stdout: string
-  timeUsed: number   // ms
+  timeUsed: number   // minute
   memoryUsed: number  // KB
   status: 'OK' | 'TLE' | 'MLE' | 'RE'
 }
@@ -25,8 +25,8 @@ export async function runInSandbox(
   boxId: number,
   run: string,
   input: string,
-  timeLimit: number,    // ms
-  memoryLimit: number   // MB
+  timeLimit: number, 
+  memoryLimit: number  
 ): Promise<SandboxResult> {
   const boxDir = `/var/local/lib/isolate/${boxId}/box`
   const metaFile = `/tmp/meta-${boxId}.txt`

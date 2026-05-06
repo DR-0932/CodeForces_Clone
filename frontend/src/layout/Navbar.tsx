@@ -7,6 +7,22 @@ const navItems = [
   { label: 'CONTESTS',   to: '/contests' },
 ]
 
+const styles = {
+  wrapper:       'font-sans border-b border-gray-200 rounded-xl',
+  topBar:        'flex items-center justify-between px-5 py-2 bg-white',
+  logo:          'text-2xl font-black tracking-wider no-underline',
+  logoBlack:      'text-black text-4xl',
+  logoBlue:       'text-4xl text-[#3664AD]',
+  userArea:      'flex items-center gap-2 text-sm',
+  userLink:      'text-blue-700 font-semibold no-underline',
+  divider:       'text-gray-400',
+  logoutBtn:     'bg-transparent border-none text-blue-700 font-semibold cursor-pointer text-sm p-0',
+  navBar:        'bg-white border border-gray-500 rounded-lg flex items-center justify-between px-5',
+  navLinks:      'flex',
+  navLink:       'px-3 py-2.5 font-bold text-sm no-underline inline-block text-gray-600 border-b-2 border-transparent',
+  navLinkActive: 'px-3 py-2.5 font-bold text-sm no-underline inline-block text-blue-700 border-b-2 border-blue-700',
+}
+
 export default function Navbar() {
   const [token, setToken]       = useState(localStorage.getItem('token'))
   const [username, setUsername] = useState(localStorage.getItem('username'))
@@ -27,74 +43,44 @@ export default function Navbar() {
   const logout = () => {
     localStorage.removeItem('token')
     localStorage.removeItem('username')
-    window.location.href = '/login' 
+    window.location.href = '/login'
   }
 
   return (
-    <div style={{ fontFamily: 'Helvetica, Arial, sans-serif', borderBottom: '1px solid #ccc' }}>
-
-      {/* Top bar — logo + user */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '8px 20px',
-        background: '#fff',
-      }}>
-        <NavLink to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ fontSize: '24px', fontWeight: 900, letterSpacing: '-1px' }}>
-            <span style={{ color: '#1a1aff' }}>CODE</span><span style={{ color: '#e03030' }}>FORCES</span>
-          </span>
+    <div className={styles.wrapper}>
+      {/* Top bar */}
+      <div className={styles.topBar}>
+        <NavLink to="/" className={styles.logo}>
+          <span className={styles.logoBlack}>CODE</span>
+          <span className={styles.logoBlue}>FORCES</span>
         </NavLink>
 
-        <div style={{ fontSize: '13px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+        <div className={styles.userArea}>
           {token ? (
             <>
-              <NavLink to={`/users/${username}`} style={{ color: '#1a1aff', textDecoration: 'none', fontWeight: 600 }}>
-                {username}
-              </NavLink>
-              <span style={{ color: '#999' }}>|</span>
-              <button
-                onClick={logout}
-                style={{ background: 'none', border: 'none', color: '#1a1aff', cursor: 'pointer', padding: 0, fontSize: '13px', fontWeight: 600 }}
-              >
-                Logout
-              </button>
+              <NavLink to={`/users/${username}`} className={styles.userLink}>{username}</NavLink>
+              <span className={styles.divider}>|</span>
+              <button onClick={logout} className={styles.logoutBtn}>Logout</button>
             </>
           ) : (
             <>
-              <NavLink to="/login"    style={{ color: '#1a1aff', textDecoration: 'none', fontWeight: 600 }}>Login</NavLink>
-              <span style={{ color: '#999' }}>|</span>
-              <NavLink to="/register" style={{ color: '#1a1aff', textDecoration: 'none', fontWeight: 600 }}>Register</NavLink>
+              <NavLink to="/login"    className={styles.userLink}>Login</NavLink>
+              <span className={styles.divider}>|</span>
+              <NavLink to="/register" className={styles.userLink}>Register</NavLink>
             </>
           )}
         </div>
       </div>
 
       {/* Nav links bar */}
-      <div style={{
-        background: '#fff',
-        borderTop: '1px solid #ddd',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0 20px',
-      }}>
-        <div style={{ display: 'flex' }}>
+      <div className={styles.navBar}>
+        <div className={styles.navLinks}>
           {navItems.map(item => (
             <NavLink
               key={item.to}
               to={item.to}
               end={item.to === '/'}
-              style={({ isActive }) => ({
-                padding: '10px 12px',
-                color: isActive ? '#1a1aff' : '#444',
-                textDecoration: 'none',
-                fontWeight: 700,
-                fontSize: '13px',
-                borderBottom: isActive ? '2px solid #1a1aff' : '2px solid transparent',
-                display: 'inline-block',
-              })}
+              className={({ isActive }) => isActive ? styles.navLinkActive : styles.navLink}
             >
               {item.label}
             </NavLink>
@@ -102,34 +88,12 @@ export default function Navbar() {
           {token && (
             <NavLink
               to="/problems/new"
-              style={({ isActive }) => ({
-                padding: '10px 12px',
-                color: isActive ? '#1a1aff' : '#444',
-                textDecoration: 'none',
-                fontWeight: 700,
-                fontSize: '13px',
-                borderBottom: isActive ? '2px solid #1a1aff' : '2px solid transparent',
-                display: 'inline-block',
-              })}
+              className={({ isActive }) => isActive ? styles.navLinkActive : styles.navLink}
             >
               + PROBLEM
             </NavLink>
           )}
         </div>
-
-        {/* Search box */}
-        <input
-          type="text"
-          placeholder="🔍"
-          style={{
-            border: '1px solid #ccc',
-            borderRadius: '2px',
-            padding: '4px 8px',
-            fontSize: '13px',
-            width: '160px',
-            outline: 'none',
-          }}
-        />
       </div>
     </div>
   )

@@ -9,9 +9,38 @@ interface TestCase {
   orderIndex: number
 }
 
+const styles = {
+  wrapper:        'max-w-3xl',
+  title:          'text-xl font-bold mb-4',
+  error:          'bg-red-50 border border-red-200 text-red-600 text-sm px-3 py-2 rounded mb-4',
+  form:           'flex flex-col gap-4',
+  grid2:          'grid grid-cols-[1fr_2fr] gap-3',
+  grid3:          'grid grid-cols-3 gap-3',
+  field:          'flex flex-col gap-1',
+  label:          'text-sm font-semibold',
+  input:          'w-full border border-gray-300 rounded px-2 py-1.5 text-sm outline-none',
+  textarea:       'w-full border border-gray-300 rounded px-2 py-1.5 text-sm outline-none resize-y font-sans',
+  checkRow:       'flex items-center gap-2',
+  checkLabel:     'text-sm',
+  tcHeader:       'flex justify-between items-center mb-3',
+  tcTitle:        'text-base font-bold m-0',
+  addBtn:         'text-sm border border-gray-300 rounded px-3 py-1 bg-white cursor-pointer',
+  tcCard:         'border border-gray-200 rounded-lg p-3 mb-3',
+  tcCardHeader:   'flex justify-between items-center mb-2',
+  tcCardNum:      'text-sm font-bold',
+  tcCardActions:  'flex gap-3 items-center',
+  sampleLabel:    'text-sm flex gap-1.5 items-center',
+  removeBtn:      'text-red-500 text-xs cursor-pointer border-none bg-none p-0',
+  tcGrid:         'grid grid-cols-2 gap-3',
+  tcLabel:        'text-xs font-bold mb-1',
+  tcTextarea:     'w-full border border-gray-300 rounded px-2 py-1.5 text-xs outline-none font-mono resize-y',
+  submitBtn:      'py-2.5 bg-blue-700 text-white font-semibold rounded text-sm cursor-pointer border-none',
+  submitOff:      'py-2.5 bg-gray-400 text-white font-semibold rounded text-sm cursor-default border-none',
+}
+
 export default function CreateProblem() {
   const navigate = useNavigate()
-  const [error, setError] = useState('')
+  const [error, setError]   = useState('')
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({
     code: '', title: '', statement: '', inputFormat: '', outputFormat: '',
@@ -21,18 +50,28 @@ export default function CreateProblem() {
     { input: '', expectedOutput: '', isSample: true, orderIndex: 1 },
   ])
 
-  const addTestCase = () => setTestCases(prev => [...prev, { input: '', expectedOutput: '', isSample: false, orderIndex: prev.length + 1 }])
-  const removeTestCase = (i: number) => setTestCases(prev => prev.filter((_, j) => j !== i).map((tc, j) => ({ ...tc, orderIndex: j + 1 })))
+  const addTestCase = () =>
+    setTestCases(prev => [...prev, { input: '', expectedOutput: '', isSample: false, orderIndex: prev.length + 1 }])
+
+  const removeTestCase = (i: number) =>
+    setTestCases(prev => prev.filter((_, j) => j !== i).map((tc, j) => ({ ...tc, orderIndex: j + 1 })))
+
   const updateTestCase = (i: number, field: keyof TestCase, value: string | boolean) =>
     setTestCases(prev => prev.map((tc, j) => j === i ? { ...tc, [field]: value } : tc))
 
-  const submit = async (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError('')
     setLoading(true)
     try {
       const tags = form.tags.split(',').map(t => t.trim()).filter(Boolean)
-      await api.post('/problems', { ...form, timeLimit: Number(form.timeLimit) * 60000, memoryLimit: Number(form.memoryLimit), difficulty: Number(form.difficulty), tags })
+      await api.post('/problems', {
+        ...form,
+        timeLimit: Number(form.timeLimit) * 60000,
+        memoryLimit: Number(form.memoryLimit),
+        difficulty: Number(form.difficulty),
+        tags,
+      })
       const valid = testCases.filter(tc => tc.input && tc.expectedOutput)
       if (valid.length > 0) await api.post(`/problems/${form.code}/testcases`, { testcases: valid })
       navigate(`/problems/${form.code}`)
@@ -44,67 +83,73 @@ export default function CreateProblem() {
   }
 
   return (
-    <div style={{ maxWidth: '800px' }}>
-      <h2>Create Problem</h2>
-      {error && <div style={{ background: '#fff0f0', border: '1px solid #f5c6c6', color: '#c0392b', padding: '8px 12px', borderRadius: '4px', fontSize: '13px', marginBottom: '16px' }}>{error}</div>}
+    <div className={styles.wrapper}>
+      <h2 className={styles.title}>Create Problem</h2>
+      {error && <div className={styles.error}>{error}</div>}
 
-      <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '12px' }}>
-          {field('Problem Code', 'code', form, setForm)}
-          {field('Title', 'title', form, setForm)}
+      <form onSubmit={submit} className={styles.form}>
+        <div className={styles.grid2}>
+          <Field label="Problem Code" value={form.code} onChange={v => setForm({ ...form, code: v })} />
+          <Field label="Title" value={form.title} onChange={v => setForm({ ...form, title: v })} />
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
-          {field('Time Limit (minutes)', 'timeLimit', form, setForm, 'number')}
-          {field('Memory Limit (MB)', 'memoryLimit', form, setForm, 'number')}
-          {field('Difficulty', 'difficulty', form, setForm, 'number')}
+
+        <div className={styles.grid3}>
+          <Field label="Time Limit (minutes)" type="number" value={String(form.timeLimit)} onChange={v => setForm({ ...form, timeLimit: +v })} />
+          <Field label="Memory Limit (MB)" type="number" value={String(form.memoryLimit)} onChange={v => setForm({ ...form, memoryLimit: +v })} />
+          <Field label="Difficulty" type="number" value={String(form.difficulty)} onChange={v => setForm({ ...form, difficulty: +v })} />
         </div>
-        {field('Tags (comma separated)', 'tags', form, setForm)}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <input type="checkbox" id="isPublic" checked={form.isPublic} onChange={e => setForm({ ...form, isPublic: e.target.checked })} />
-          <label htmlFor="isPublic" style={{ fontSize: '13px' }}>Public</label>
+
+        <Field label="Tags (comma separated)" value={form.tags} onChange={v => setForm({ ...form, tags: v })} />
+
+        <div className={styles.checkRow}>
+          <input type="checkbox" id="isPublic" checked={form.isPublic}
+            onChange={e => setForm({ ...form, isPublic: e.target.checked })} />
+          <label htmlFor="isPublic" className={styles.checkLabel}>Public</label>
         </div>
-        {field('Problem Statement', 'statement', form, setForm, 'text', 6)}
-        {field('Input Format', 'inputFormat', form, setForm, 'text', 3)}
-        {field('Output Format', 'outputFormat', form, setForm, 'text', 3)}
-        {field('Notes (optional)', 'notes', form, setForm, 'text', 2)}
+
+        <TextareaField label="Problem Statement" rows={6} value={form.statement} onChange={v => setForm({ ...form, statement: v })} />
+        <TextareaField label="Input Format" rows={3} value={form.inputFormat} onChange={v => setForm({ ...form, inputFormat: v })} />
+        <TextareaField label="Output Format" rows={3} value={form.outputFormat} onChange={v => setForm({ ...form, outputFormat: v })} />
+        <TextareaField label="Notes (optional)" rows={2} value={form.notes} onChange={v => setForm({ ...form, notes: v })} />
 
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <h3 style={{ margin: 0 }}>Test Cases</h3>
-            <button type="button" onClick={addTestCase}>+ Add</button>
+          <div className={styles.tcHeader}>
+            <h3 className={styles.tcTitle}>Test Cases</h3>
+            <button type="button" onClick={addTestCase} className={styles.addBtn}>+ Add</button>
           </div>
+
           {testCases.map((tc, i) => (
-            <div key={i} style={{ border: '1px solid #ddd', borderRadius: '6px', padding: '12px', marginBottom: '12px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <strong style={{ fontSize: '13px' }}>Test #{tc.orderIndex}</strong>
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                  <label style={{ fontSize: '13px', display: 'flex', gap: '6px', alignItems: 'center' }}>
-                    <input type="checkbox" checked={tc.isSample} onChange={e => updateTestCase(i, 'isSample', e.target.checked)} />
+            <div key={i} className={styles.tcCard}>
+              <div className={styles.tcCardHeader}>
+                <span className={styles.tcCardNum}>Test #{tc.orderIndex}</span>
+                <div className={styles.tcCardActions}>
+                  <label className={styles.sampleLabel}>
+                    <input type="checkbox" checked={tc.isSample}
+                      onChange={e => updateTestCase(i, 'isSample', e.target.checked)} />
                     Sample
                   </label>
                   {testCases.length > 1 && (
-                    <button type="button" onClick={() => removeTestCase(i)} style={{ color: 'red', fontSize: '12px' }}>Remove</button>
+                    <button type="button" onClick={() => removeTestCase(i)} className={styles.removeBtn}>Remove</button>
                   )}
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <div className={styles.tcGrid}>
                 <div>
-                  <label style={{ fontSize: '12px', fontWeight: 600 }}>Input</label>
-                  <textarea rows={4} value={tc.input} onChange={e => updateTestCase(i, 'input', e.target.value)}
-                    style={{ width: '100%', fontFamily: 'monospace', fontSize: '13px', marginTop: '4px' }} />
+                  <div className={styles.tcLabel}>Input</div>
+                  <textarea rows={4} value={tc.input} className={styles.tcTextarea}
+                    onChange={e => updateTestCase(i, 'input', e.target.value)} />
                 </div>
                 <div>
-                  <label style={{ fontSize: '12px', fontWeight: 600 }}>Expected Output</label>
-                  <textarea rows={4} value={tc.expectedOutput} onChange={e => updateTestCase(i, 'expectedOutput', e.target.value)}
-                    style={{ width: '100%', fontFamily: 'monospace', fontSize: '13px', marginTop: '4px' }} />
+                  <div className={styles.tcLabel}>Expected Output</div>
+                  <textarea rows={4} value={tc.expectedOutput} className={styles.tcTextarea}
+                    onChange={e => updateTestCase(i, 'expectedOutput', e.target.value)} />
                 </div>
               </div>
             </div>
           ))}
         </div>
 
-        <button type="submit" disabled={loading}
-          style={{ padding: '10px', background: loading ? '#999' : '#1a1aff', color: 'white', border: 'none', borderRadius: '4px', fontSize: '14px', fontWeight: 600, cursor: loading ? 'default' : 'pointer' }}>
+        <button type="submit" disabled={loading} className={loading ? styles.submitOff : styles.submitBtn}>
           {loading ? 'Creating...' : 'Create Problem'}
         </button>
       </form>
@@ -112,21 +157,26 @@ export default function CreateProblem() {
   )
 }
 
-type FormState = Record<string, string | number | boolean>
-
-function field(label: string, key: string, form: FormState, setForm: (f: FormState) => void, type = 'text', rows?: number) {
+function Field({ label, value, onChange, type = 'text' }: {
+  label: string; value: string; onChange: (v: string) => void; type?: string
+}) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-      <label style={{ fontSize: '13px', fontWeight: 600 }}>{label}</label>
-      {rows ? (
-        <textarea rows={rows} value={form[key] as string}
-          onChange={e => setForm({ ...form, [key]: e.target.value })}
-          style={{ width: '100%', fontFamily: 'inherit', fontSize: '13px', resize: 'vertical' }} />
-      ) : (
-        <input type={type} value={form[key] as string | number}
-          onChange={e => setForm({ ...form, [key]: e.target.value })}
-          style={{ width: '100%' }} />
-      )}
+    <div className="flex flex-col gap-1">
+      <label className="text-sm font-semibold">{label}</label>
+      <input type={type} value={value} onChange={e => onChange(e.target.value)}
+        className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm outline-none" />
+    </div>
+  )
+}
+
+function TextareaField({ label, rows, value, onChange }: {
+  label: string; rows: number; value: string; onChange: (v: string) => void
+}) {
+  return (
+    <div className="flex flex-col gap-1">
+      <label className="text-sm font-semibold">{label}</label>
+      <textarea rows={rows} value={value} onChange={e => onChange(e.target.value)}
+        className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm outline-none resize-y font-sans" />
     </div>
   )
 }

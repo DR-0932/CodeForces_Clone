@@ -25,16 +25,41 @@ function formatDuration(start: string, end: string) {
   return `${h}h ${m}m`
 }
 
-const statusBadge = (status: string) => {
-  const map: Record<string, { label: string; color: string; bg: string }> = {
-    upcoming: { label: 'Before',   color: '#1a1aff', bg: '#eef' },
-    running:  { label: 'Running',  color: '#fff',    bg: '#2a9d2a' },
-    finished: { label: 'Finished', color: '#666',    bg: '#eee' },
-  }
-  const s = map[status]
+const statusBadgeClass: Record<string, string> = {
+  upcoming: 'bg-blue-50 text-blue-700',
+  running:  'bg-green-600 text-white',
+  finished: 'bg-gray-100 text-gray-500',
+}
+
+const statusLabel: Record<string, string> = {
+  upcoming: 'Before',
+  running:  'Running',
+  finished: 'Finished',
+}
+
+const styles = {
+  wrapper:      '',
+  header:       'flex justify-between items-center mb-4',
+  title:        'text-xl font-bold m-0',
+  createBtn:    'bg-blue-700 text-white border-none rounded px-4 py-1.5 font-semibold cursor-pointer text-sm',
+  loading:      'text-gray-400',
+  table:        'w-full border-collapse text-sm',
+  thead:        'bg-gray-100',
+  th:           'px-3 py-2 text-left text-xs font-bold text-gray-500 border-b-2 border-gray-200',
+  rowEven:      'bg-white border-b border-gray-100',
+  rowOdd:       'bg-gray-50 border-b border-gray-100',
+  td:           'px-3 py-2.5',
+  tdMuted:      'px-3 py-2.5 text-gray-400',
+  tdNowrap:     'px-3 py-2.5 whitespace-nowrap',
+  titleLink:    'text-blue-700 font-semibold no-underline',
+  badge:        'text-xs px-2 py-0.5 rounded font-bold',
+  empty:        'px-3 py-6 text-center text-gray-400',
+}
+
+function StatusBadge({ status }: { status: string }) {
   return (
-    <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '3px', background: s.bg, color: s.color, fontWeight: 700 }}>
-      {s.label}
+    <span className={`${styles.badge} ${statusBadgeClass[status] || ''}`}>
+      {statusLabel[status]}
     </span>
   )
 }
@@ -54,47 +79,43 @@ export default function Contests() {
   ]
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-        <h2 style={{ margin: 0 }}>Contests</h2>
+    <div className={styles.wrapper}>
+      <div className={styles.header}>
+        <h2 className={styles.title}>Contests</h2>
         {localStorage.getItem('token') && (
           <Link to="/contests/new">
-            <button style={{ background: '#1a1aff', color: 'white', border: 'none', borderRadius: '4px', padding: '6px 14px', fontWeight: 600, cursor: 'pointer' }}>
-              + Create Contest
-            </button>
+            <button className={styles.createBtn}>+ Create Contest</button>
           </Link>
         )}
       </div>
 
-      {loading ? <p style={{ color: '#999' }}>Loading...</p> : (
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-          <thead>
-            <tr style={{ background: '#f0f0f0' }}>
-              <th style={th}>Name</th>
-              <th style={th}>Type</th>
-              <th style={th}>Start</th>
-              <th style={th}>Duration</th>
-              <th style={th}>Status</th>
-              <th style={th}>By</th>
+      {loading ? <p className={styles.loading}>Loading...</p> : (
+        <table className={styles.table}>
+          <thead className={styles.thead}>
+            <tr>
+              <th className={styles.th}>Name</th>
+              <th className={styles.th}>Type</th>
+              <th className={styles.th}>Start</th>
+              <th className={styles.th}>Duration</th>
+              <th className={styles.th}>Status</th>
+              <th className={styles.th}>By</th>
             </tr>
           </thead>
           <tbody>
             {ordered.map((c, i) => (
-              <tr key={c.id} style={{ background: i % 2 === 0 ? '#fff' : '#f9f9f9', borderBottom: '1px solid #eee' }}>
-                <td style={td}>
-                  <Link to={`/contests/${c.id}`} style={{ color: '#1a1aff', textDecoration: 'none', fontWeight: 600 }}>
-                    {c.title}
-                  </Link>
+              <tr key={c.id} className={i % 2 === 0 ? styles.rowEven : styles.rowOdd}>
+                <td className={styles.td}>
+                  <Link to={`/contests/${c.id}`} className={styles.titleLink}>{c.title}</Link>
                 </td>
-                <td style={{ ...td, color: '#888' }}>{c.type}</td>
-                <td style={{ ...td, whiteSpace: 'nowrap' }}>{new Date(c.startTime).toLocaleString()}</td>
-                <td style={td}>{formatDuration(c.startTime, c.endTime)}</td>
-                <td style={td}>{statusBadge(getStatus(c.startTime, c.endTime))}</td>
-                <td style={{ ...td, color: '#888' }}>{c.createdby?.username}</td>
+                <td className={styles.tdMuted}>{c.type}</td>
+                <td className={styles.tdNowrap}>{new Date(c.startTime).toLocaleString()}</td>
+                <td className={styles.td}>{formatDuration(c.startTime, c.endTime)}</td>
+                <td className={styles.td}><StatusBadge status={getStatus(c.startTime, c.endTime)} /></td>
+                <td className={styles.tdMuted}>{c.createdby?.username}</td>
               </tr>
             ))}
             {ordered.length === 0 && (
-              <tr><td colSpan={6} style={{ padding: '24px', textAlign: 'center', color: '#999' }}>No contests yet</td></tr>
+              <tr><td colSpan={6} className={styles.empty}>No contests yet</td></tr>
             )}
           </tbody>
         </table>
@@ -102,6 +123,3 @@ export default function Contests() {
     </div>
   )
 }
-
-const th: React.CSSProperties = { padding: '8px 12px', textAlign: 'left', fontWeight: 700, fontSize: '12px', color: '#555', borderBottom: '2px solid #ddd' }
-const td: React.CSSProperties = { padding: '10px 12px' }

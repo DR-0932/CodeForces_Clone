@@ -15,17 +15,28 @@ interface Submission {
   user: { username: string }
 }
 
-const verdictStyle = (v: string): React.CSSProperties => {
-  const map: Record<string, string> = {
-    ACCEPTED: '#2a9d2a',
-    WRONG_ANSWER: '#e03030',
-    TIME_LIMIT_EXCEEDED: '#e08030',
-    MEMORY_LIMIT_EXCEEDED: '#e08030',
-    RUNTIME_ERROR: '#aa00aa',
-    COMPILATION_ERROR: '#555',
-    PENDING: '#1a1aff',
-  }
-  return { color: map[v] || '#333', fontWeight: 700, fontSize: '20px' }
+const verdictClass: Record<string, string> = {
+  ACCEPTED:             'text-green-600',
+  WRONG_ANSWER:         'text-red-500',
+  TIME_LIMIT_EXCEEDED:  'text-orange-400',
+  MEMORY_LIMIT_EXCEEDED:'text-orange-400',
+  RUNTIME_ERROR:        'text-purple-700',
+  COMPILATION_ERROR:    'text-gray-500',
+  PENDING:              'text-blue-700',
+}
+
+const styles = {
+  wrapper:      'max-w-3xl',
+  backLink:     'text-sm text-blue-700 no-underline mb-4 block',
+  card:         'border border-gray-200 rounded-lg p-5 mb-5',
+  verdictText:  'text-xl font-bold',
+  metaRow:      'flex gap-6 mt-3 text-sm text-gray-500',
+  metaStrong:   'text-gray-800 font-semibold',
+  failedStrong: 'text-red-500 font-semibold',
+  submitted:    'mt-2 text-xs text-gray-400',
+  codeTitle:    'font-bold mb-2',
+  codePre:      'bg-gray-900 text-gray-100 p-4 rounded-lg text-xs overflow-x-auto leading-relaxed font-mono',
+  loading:      'text-gray-400',
 }
 
 export default function Submission() {
@@ -43,38 +54,42 @@ export default function Submission() {
     poll()
   }, [id])
 
-  if (!submission) return <p style={{ color: '#999' }}>Loading...</p>
+  if (!submission) return <p className={styles.loading}>Loading...</p>
+
+  const vc = verdictClass[submission.verdict] || 'text-gray-700'
 
   return (
-    <div style={{ maxWidth: '800px' }}>
-      <div style={{ marginBottom: '16px' }}>
-        <Link to={`/problems/${submission.problem.code}`} style={{ fontSize: '13px', color: '#1a1aff' }}>
-          ← {submission.problem.code}. {submission.problem.title}
-        </Link>
-      </div>
+    <div className={styles.wrapper}>
+      <Link to={`/problems/${submission.problem.code}`} className={styles.backLink}>
+        ← {submission.problem.code}. {submission.problem.title}
+      </Link>
 
-      <div style={{ border: '1px solid #ddd', borderRadius: '6px', padding: '20px', marginBottom: '20px' }}>
-        <div style={verdictStyle(submission.verdict)}>
+      <div className={styles.card}>
+        <div className={`${styles.verdictText} ${vc}`}>
           {submission.verdict === 'PENDING' ? '⏳ Judging...' : submission.verdict.replace(/_/g, ' ')}
         </div>
 
-        <div style={{ display: 'flex', gap: '24px', marginTop: '12px', fontSize: '13px', color: '#666' }}>
-          <span>Language: <strong style={{ color: '#222' }}>{submission.language}</strong></span>
-          {submission.timeUsed !== null && <span>Time: <strong style={{ color: '#222' }}>{submission.timeUsed}ms</strong></span>}
-          {submission.memoryUsed !== null && <span>Memory: <strong style={{ color: '#222' }}>{(submission.memoryUsed / 1024).toFixed(1)}MB</strong></span>}
-          {submission.failedTest !== null && <span>Failed on test: <strong style={{ color: '#e03030' }}>#{submission.failedTest}</strong></span>}
+        <div className={styles.metaRow}>
+          <span>Language: <strong className={styles.metaStrong}>{submission.language}</strong></span>
+          {submission.timeUsed !== null && (
+            <span>Time: <strong className={styles.metaStrong}>{submission.timeUsed}ms</strong></span>
+          )}
+          {submission.memoryUsed !== null && (
+            <span>Memory: <strong className={styles.metaStrong}>{(submission.memoryUsed / 1024).toFixed(1)}MB</strong></span>
+          )}
+          {submission.failedTest !== null && (
+            <span>Failed on test: <strong className={styles.failedStrong}>#{submission.failedTest}</strong></span>
+          )}
         </div>
 
-        <div style={{ marginTop: '8px', fontSize: '12px', color: '#aaa' }}>
+        <div className={styles.submitted}>
           Submitted by {submission.user.username} at {new Date(submission.submittedAt).toLocaleString()}
         </div>
       </div>
 
       <div>
-        <h3 style={{ marginBottom: '8px' }}>Code</h3>
-        <pre style={{ background: '#1e1e1e', color: '#d4d4d4', padding: '16px', borderRadius: '6px', fontSize: '13px', overflowX: 'auto', lineHeight: 1.5 }}>
-          {submission.code}
-        </pre>
+        <h3 className={styles.codeTitle}>Code</h3>
+        <pre className={styles.codePre}>{submission.code}</pre>
       </div>
     </div>
   )

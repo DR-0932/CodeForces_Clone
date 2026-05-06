@@ -10,6 +10,32 @@ interface Problem {
   _count: { submissions: number }
 }
 
+const styles = {
+  header:        'flex justify-between items-center mb-4',
+  title:         'text-xl font-bold',
+  searchForm:    'flex gap-2',
+  searchInput:   'w-56 border border-gray-300 rounded px-2 py-1.5 text-sm outline-none',
+  searchBtn:     'px-3 py-1.5 text-sm border border-gray-300 rounded bg-gray-100 cursor-pointer',
+  filterBar:     'mb-3 text-sm text-gray-600 flex items-center gap-2',
+  clearBtn:      'text-xs border border-gray-300 rounded px-2 py-0.5 cursor-pointer bg-white',
+  table:         'w-full border-collapse text-sm',
+  thead:         'bg-gray-100',
+  th:            'px-3 py-2 text-left text-xs font-bold text-gray-500 border-b-2 border-gray-200',
+  rowEven:       'bg-white border-b border-gray-100',
+  rowOdd:        'bg-gray-50 border-b border-gray-100',
+  codeCell:      'px-3 py-2.5 text-gray-400 w-16',
+  titleCell:     'px-3 py-2.5',
+  titleLink:     'text-blue-700 font-semibold no-underline',
+  tagsCell:      'px-3 py-2.5',
+  tagsRow:       'flex gap-1 flex-wrap',
+  tag:           'text-xs px-2 py-0.5 bg-blue-50 text-blue-700 rounded cursor-pointer',
+  diffCell:      'px-3 py-2.5 font-bold',
+  empty:         'px-3 py-6 text-center text-gray-400 col-span-4',
+  pagination:    'flex gap-2 mt-4 justify-center items-center',
+  pageBtn:       'px-3 py-1.5 text-sm border border-gray-300 rounded bg-white cursor-pointer',
+  pageLabel:     'text-sm px-3 py-1.5',
+}
+
 function difficultyColor(d: number) {
   if (d < 1200) return '#808080'
   if (d < 1600) return '#008000'
@@ -20,9 +46,9 @@ function difficultyColor(d: number) {
 }
 
 export default function Problems() {
-  const [problems, setProblems] = useState<Problem[]>([])
-  const [loading, setLoading] = useState(true)
-  const [search, setSearch] = useState('')
+  const [problems, setProblems]     = useState<Problem[]>([])
+  const [loading, setLoading]       = useState(true)
+  const [search, setSearch]         = useState('')
   const [searchParams, setSearchParams] = useSearchParams()
 
   const tag  = searchParams.get('tag') || ''
@@ -42,83 +68,72 @@ export default function Problems() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-        <h2 style={{ margin: 0 }}>Problemset</h2>
-        <form onSubmit={handleSearch} style={{ display: 'flex', gap: '8px' }}>
-          <input
-            type="text"
-            placeholder="Search problems..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            style={{ width: '220px' }}
-          />
-          <button type="submit">Search</button>
+      <div className={styles.header}>
+        <h2 className={styles.title}>Problemset</h2>
+        <form onSubmit={handleSearch} className={styles.searchForm}>
+          <input className={styles.searchInput} type="text" placeholder="Search problems..."
+            value={search} onChange={e => setSearch(e.target.value)} />
+          <button type="submit" className={styles.searchBtn}>Search</button>
         </form>
       </div>
 
       {tag && (
-        <div style={{ marginBottom: '12px', fontSize: '13px' }}>
+        <div className={styles.filterBar}>
           Filtering by tag: <strong>{tag}</strong>
-          <button onClick={() => setSearchParams({})} style={{ marginLeft: '8px', fontSize: '12px' }}>✕ Clear</button>
+          <button onClick={() => setSearchParams({})} className={styles.clearBtn}>✕ Clear</button>
         </div>
       )}
 
       {loading ? (
-        <p style={{ color: '#999' }}>Loading...</p>
+        <p className="text-gray-400">Loading...</p>
       ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-          <thead>
-            <tr style={{ background: '#f0f0f0' }}>
-              <th style={th}>#</th>
-              <th style={th}>Title</th>
-              <th style={th}>Tags</th>
-              <th style={th}>Difficulty</th>
+        <table className={styles.table}>
+          <thead className={styles.thead}>
+            <tr>
+              <th className={styles.th}>#</th>
+              <th className={styles.th}>Title</th>
+              <th className={styles.th}>Tags</th>
+              <th className={styles.th}>Difficulty</th>
             </tr>
           </thead>
           <tbody>
             {problems.map((p, i) => (
-              <tr key={p.code} style={{ background: i % 2 === 0 ? '#fff' : '#f9f9f9', borderBottom: '1px solid #eee' }}>
-                <td style={{ ...td, color: '#888', width: '60px' }}>{p.code}</td>
-                <td style={td}>
-                  <Link to={`/problems/${p.code}`} style={{ color: '#1a1aff', textDecoration: 'none', fontWeight: 600 }}>
-                    {p.title}
-                  </Link>
+              <tr key={p.code} className={i % 2 === 0 ? styles.rowEven : styles.rowOdd}>
+                <td className={styles.codeCell}>{p.code}</td>
+                <td className={styles.titleCell}>
+                  <Link to={`/problems/${p.code}`} className={styles.titleLink}>{p.title}</Link>
                 </td>
-                <td style={td}>
-                  <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                <td className={styles.tagsCell}>
+                  <div className={styles.tagsRow}>
                     {p.tags.map(t => (
-                      <span
-                        key={t.tag.name}
-                        onClick={() => setSearchParams({ tag: t.tag.name })}
-                        style={{ fontSize: '11px', padding: '2px 7px', background: '#e8f0fe', color: '#1a1aff', borderRadius: '3px', cursor: 'pointer' }}
-                      >
+                      <span key={t.tag.name} className={styles.tag}
+                        onClick={() => setSearchParams({ tag: t.tag.name })}>
                         {t.tag.name}
                       </span>
                     ))}
                   </div>
                 </td>
-                <td style={{ ...td, fontWeight: 700, color: difficultyColor(p.difficulty) }}>{p.difficulty}</td>
+                <td className={styles.diffCell} style={{ color: difficultyColor(p.difficulty) }}>{p.difficulty}</td>
               </tr>
             ))}
             {problems.length === 0 && (
-              <tr><td colSpan={4} style={{ padding: '24px', textAlign: 'center', color: '#999' }}>No problems found</td></tr>
+              <tr><td colSpan={4} className={styles.empty}>No problems found</td></tr>
             )}
           </tbody>
         </table>
       )}
 
-      <div style={{ display: 'flex', gap: '8px', marginTop: '16px', justifyContent: 'center' }}>
+      <div className={styles.pagination}>
         {page > 1 && (
-          <button onClick={() => setSearchParams({ ...(tag && { tag }), page: String(page - 1) })}>← Prev</button>
+          <button className={styles.pageBtn}
+            onClick={() => setSearchParams({ ...(tag && { tag }), page: String(page - 1) })}>← Prev</button>
         )}
-        <span style={{ padding: '5px 12px', fontSize: '13px' }}>Page {page}</span>
+        <span className={styles.pageLabel}>Page {page}</span>
         {problems.length === 50 && (
-          <button onClick={() => setSearchParams({ ...(tag && { tag }), page: String(page + 1) })}>Next →</button>
+          <button className={styles.pageBtn}
+            onClick={() => setSearchParams({ ...(tag && { tag }), page: String(page + 1) })}>Next →</button>
         )}
       </div>
     </div>
   )
 }
-
-const th: React.CSSProperties = { padding: '8px 12px', textAlign: 'left', fontWeight: 700, fontSize: '12px', color: '#555', borderBottom: '2px solid #ddd' }
-const td: React.CSSProperties = { padding: '10px 12px' }

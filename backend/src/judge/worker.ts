@@ -29,11 +29,10 @@ submissionQueue.process(async (job) => {
   try {
     await initBox(boxId)
 
-    // write code into the sandbox box
     const boxDir = `/var/local/lib/isolate/${boxId}/box`
     await writeFile(path.join(boxDir, config.filename), submission.code)
 
-    // compile (no-op for Python and JavaScript)
+    
     const compileResult = await compile(boxId, config)
     if (!compileResult.success) {
       await prisma.submission.update({
@@ -43,7 +42,7 @@ submissionQueue.process(async (job) => {
       return
     }
 
-    // run against each test case, stop at first failure
+    
     let finalVerdict = 'ACCEPTED'
     let failedTest: number | null = null
     let maxTime = 0

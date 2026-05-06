@@ -29,6 +29,32 @@ const DEFAULT_CODE: Record<string, string> = {
   JAVASCRIPT: 'const lines = require("fs").readFileSync("/dev/stdin","utf8").split("\\n");\n',
 }
 
+const styles = {
+  layout:       'grid grid-cols-2 gap-6 h-[calc(100vh-120px)]',
+  leftPane:     'overflow-y-auto pr-3',
+  titleRow:     'flex items-baseline gap-3 mb-1',
+  problemTitle: 'text-xl font-bold m-0',
+  diffLabel:    'text-sm text-gray-400',
+  tagsRow:      'flex gap-1.5 flex-wrap mb-3',
+  tag:          'text-xs px-2 py-0.5 bg-blue-50 text-blue-700 rounded',
+  limitsRow:    'text-xs text-gray-500 mb-4 flex gap-4',
+  section:      'mb-4',
+  sectionTitle: 'text-base font-bold mb-1',
+  body:         'leading-relaxed whitespace-pre-wrap text-sm',
+  exampleBlock: 'mb-3',
+  exampleGrid:  'grid grid-cols-2 gap-2',
+  exampleLabel: 'text-xs font-bold mb-1 text-gray-500',
+  examplePre:   'bg-gray-100 p-2 rounded text-xs m-0 font-mono',
+  rightPane:    'flex flex-col gap-2',
+  toolbar:      'flex gap-2 items-center',
+  langSelect:   'text-sm border border-gray-300 rounded px-2 py-1 outline-none',
+  errorMsg:     'text-red-500 text-sm',
+  submitBtn:    'ml-auto px-5 py-1.5 bg-blue-700 text-white font-semibold rounded text-sm cursor-pointer border-none',
+  submitBtnOff: 'ml-auto px-5 py-1.5 bg-gray-400 text-white font-semibold rounded text-sm cursor-default border-none',
+  editorWrap:   'flex-1 border border-gray-200 rounded overflow-hidden',
+  loading:      'text-gray-400',
+}
+
 export default function Problem() {
   const { code } = useParams<{ code: string }>()
   const navigate = useNavigate()
@@ -61,87 +87,80 @@ export default function Problem() {
     }
   }
 
-  if (!problem) return <p style={{ color: '#999' }}>Loading...</p>
+  if (!problem) return <p className={styles.loading}>Loading...</p>
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', height: 'calc(100vh - 120px)' }}>
-
+    <div className={styles.layout}>
       {/* Left — problem statement */}
-      <div style={{ overflowY: 'auto', paddingRight: '12px' }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', marginBottom: '4px' }}>
-          <h2 style={{ margin: 0 }}>{problem.code}. {problem.title}</h2>
-          <span style={{ fontSize: '13px', color: '#888' }}>{problem.difficulty}</span>
+      <div className={styles.leftPane}>
+        <div className={styles.titleRow}>
+          <h2 className={styles.problemTitle}>{problem.code}. {problem.title}</h2>
+          <span className={styles.diffLabel}>{problem.difficulty}</span>
         </div>
 
-        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '12px' }}>
+        <div className={styles.tagsRow}>
           {problem.tags.map(t => (
-            <span key={t.tag.name} style={{ fontSize: '11px', padding: '2px 8px', background: '#e8f0fe', color: '#1a1aff', borderRadius: '3px' }}>
-              {t.tag.name}
-            </span>
+            <span key={t.tag.name} className={styles.tag}>{t.tag.name}</span>
           ))}
         </div>
 
-        <div style={{ fontSize: '12px', color: '#666', marginBottom: '16px', display: 'flex', gap: '16px' }}>
+        <div className={styles.limitsRow}>
           <span>Time: {problem.timeLimit / 60000} min</span>
           <span>Memory: {problem.memoryLimit}MB</span>
         </div>
 
-        <section style={{ marginBottom: '16px' }}>
-          <h3>Problem Statement</h3>
-          <p style={{ lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{problem.statement}</p>
+        <section className={styles.section}>
+          <h3 className={styles.sectionTitle}>Problem Statement</h3>
+          <p className={styles.body}>{problem.statement}</p>
         </section>
 
-        <section style={{ marginBottom: '16px' }}>
-          <h3>Input Format</h3>
-          <p style={{ lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{problem.inputFormat}</p>
+        <section className={styles.section}>
+          <h3 className={styles.sectionTitle}>Input Format</h3>
+          <p className={styles.body}>{problem.inputFormat}</p>
         </section>
 
-        <section style={{ marginBottom: '16px' }}>
-          <h3>Output Format</h3>
-          <p style={{ lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{problem.outputFormat}</p>
+        <section className={styles.section}>
+          <h3 className={styles.sectionTitle}>Output Format</h3>
+          <p className={styles.body}>{problem.outputFormat}</p>
         </section>
 
         {problem.testCases.map((tc, i) => (
-          <div key={i} style={{ marginBottom: '12px' }}>
-            <h3>Example {i + 1}</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+          <div key={i} className={styles.exampleBlock}>
+            <h3 className={styles.sectionTitle}>Example {i + 1}</h3>
+            <div className={styles.exampleGrid}>
               <div>
-                <div style={{ fontSize: '12px', fontWeight: 700, marginBottom: '4px', color: '#555' }}>Input</div>
-                <pre style={{ background: '#f5f5f5', padding: '8px', borderRadius: '4px', margin: 0, fontSize: '13px' }}>{tc.input}</pre>
+                <div className={styles.exampleLabel}>Input</div>
+                <pre className={styles.examplePre}>{tc.input}</pre>
               </div>
               <div>
-                <div style={{ fontSize: '12px', fontWeight: 700, marginBottom: '4px', color: '#555' }}>Output</div>
-                <pre style={{ background: '#f5f5f5', padding: '8px', borderRadius: '4px', margin: 0, fontSize: '13px' }}>{tc.expectedOutput}</pre>
+                <div className={styles.exampleLabel}>Output</div>
+                <pre className={styles.examplePre}>{tc.expectedOutput}</pre>
               </div>
             </div>
           </div>
         ))}
 
         {problem.notes && (
-          <section>
-            <h3>Notes</h3>
-            <p style={{ lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{problem.notes}</p>
+          <section className={styles.section}>
+            <h3 className={styles.sectionTitle}>Notes</h3>
+            <p className={styles.body}>{problem.notes}</p>
           </section>
         )}
       </div>
 
       {/* Right — editor */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <select value={language} onChange={e => changeLanguage(e.target.value)} style={{ fontSize: '13px' }}>
+      <div className={styles.rightPane}>
+        <div className={styles.toolbar}>
+          <select className={styles.langSelect} value={language} onChange={e => changeLanguage(e.target.value)}>
             {LANGUAGES.map(l => <option key={l} value={l}>{l}</option>)}
           </select>
-          {error && <span style={{ color: '#c0392b', fontSize: '13px' }}>{error}</span>}
-          <button
-            onClick={submit}
-            disabled={submitting}
-            style={{ marginLeft: 'auto', padding: '6px 20px', background: submitting ? '#999' : '#1a1aff', color: 'white', border: 'none', borderRadius: '4px', fontWeight: 600, cursor: submitting ? 'default' : 'pointer' }}
-          >
+          {error && <span className={styles.errorMsg}>{error}</span>}
+          <button onClick={submit} disabled={submitting} className={submitting ? styles.submitBtnOff : styles.submitBtn}>
             {submitting ? 'Submitting...' : 'Submit'}
           </button>
         </div>
 
-        <div style={{ flex: 1, border: '1px solid #ddd', borderRadius: '4px', overflow: 'hidden' }}>
+        <div className={styles.editorWrap}>
           <Editor
             height="100%"
             language={MONACO_LANG[language]}

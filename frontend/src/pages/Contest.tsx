@@ -24,13 +24,52 @@ interface Contest {
   createdby: { username: string }
 }
 
+const styles = {
+  wrapper:       '',
+  header:        'mb-5',
+  contestTitle:  'text-xl font-bold mb-1',
+  metaRow:       'text-sm text-gray-500 flex gap-4',
+  actionRow:     'flex gap-3 items-center mb-4',
+  registerBtn:   'bg-blue-700 text-white border-none rounded px-4 py-1.5 font-semibold cursor-pointer text-sm',
+  registerOff:   'bg-gray-400 text-white border-none rounded px-4 py-1.5 font-semibold cursor-default text-sm',
+  msgOk:         'text-sm text-green-600',
+  msgErr:        'text-sm text-red-500',
+  tabs:          'flex border-b-2 border-gray-200 mb-4',
+  tabActive:     'px-4 py-2 border-none bg-none font-bold text-sm cursor-pointer border-b-2 border-blue-700 text-blue-700 -mb-0.5 capitalize',
+  tabInactive:   'px-4 py-2 border-none bg-none font-bold text-sm cursor-pointer border-b-2 border-transparent text-gray-500 -mb-0.5 capitalize',
+  table:         'w-full border-collapse text-sm',
+  thead:         'bg-gray-100',
+  th:            'px-3 py-2 text-left text-xs font-bold text-gray-500 border-b-2 border-gray-200',
+  rowEven:       'bg-white border-b border-gray-100',
+  rowOdd:        'bg-gray-50 border-b border-gray-100',
+  td:            'px-3 py-2.5',
+  tdLabel:       'px-3 py-2.5 font-bold w-12',
+  tdMuted:       'px-3 py-2.5 text-gray-400',
+  tdRank:        'px-3 py-2.5 text-gray-400',
+  problemLink:   'text-blue-700 font-semibold no-underline',
+  problemMuted:  'text-gray-400',
+  userLink:      'text-blue-700 font-semibold no-underline',
+  empty:         'px-3 py-5 text-center text-gray-400',
+  addForm:       'flex gap-2 items-center mt-4',
+  addInput:      'border border-gray-300 rounded px-2 py-1.5 text-sm outline-none',
+  addInputWide:  'w-44 border border-gray-300 rounded px-2 py-1.5 text-sm outline-none',
+  addInputSmall: 'w-24 border border-gray-300 rounded px-2 py-1.5 text-sm outline-none',
+  addBtn:        'bg-blue-700 text-white border-none rounded px-3 py-1.5 font-semibold cursor-pointer text-sm',
+  addBtnOff:     'bg-gray-400 text-white border-none rounded px-3 py-1.5 font-semibold cursor-default text-sm',
+  addError:      'text-sm text-red-500',
+  loading:       'text-gray-400',
+}
+
 export default function Contest() {
   const { id } = useParams<{ id: string }>()
-  const [contest, setContest] = useState<Contest | null>(null)
+  const [contest, setContest]     = useState<Contest | null>(null)
   const [standings, setStandings] = useState<Standing[]>([])
-  const [tab, setTab] = useState<'problems' | 'standings'>('problems')
+  const [tab, setTab]             = useState<'problems' | 'standings'>('problems')
   const [registering, setRegistering] = useState(false)
-  const [message, setMessage] = useState('')
+  const [message, setMessage]     = useState('')
+  const [addForm, setAddForm]     = useState({ problemCode: '', label: '' })
+  const [adding, setAdding]       = useState(false)
+  const [addError, setAddError]   = useState('')
 
   useEffect(() => {
     api.get(`/contests/${id}`).then(res => setContest(res.data))
@@ -50,106 +89,142 @@ export default function Contest() {
     }
   }
 
-  if (!contest) return <p style={{ color: '#999' }}>Loading...</p>
+  const addProblem = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setAddError('')
+    setAdding(true)
+    try {
+      await api.post(`/contests/${id}/problems`, addForm)
+      const res = await api.get(`/contests/${id}`)
+      setContest(res.data)
+      setAddForm({ problemCode: '', label: '' })
+    } catch (err: any) {
+      setAddError(err.response?.data?.error || 'Failed to add problem')
+    } finally {
+      setAdding(false)
+    }
+  }
 
-  const now = Date.now()
+  if (!contest) return <p className={styles.loading}>Loading...</p>
+
+  const now      = Date.now()
   const started  = now >= new Date(contest.startTime).getTime()
   const finished = now > new Date(contest.endTime).getTime()
+  const isOwner  = localStorage.getItem('username') === contest.createdby?.username
 
   return (
-    <div>
-      <div style={{ marginBottom: '20px' }}>
-        <h2 style={{ marginBottom: '4px' }}>{contest.title}</h2>
-        <div style={{ fontSize: '13px', color: '#666', display: 'flex', gap: '16px' }}>
+    <div className={styles.wrapper}>
+      <div className={styles.header}>
+        <h2 className={styles.contestTitle}>{contest.title}</h2>
+        <div className={styles.metaRow}>
           <span>{contest.type}</span>
           <span>{new Date(contest.startTime).toLocaleString()} → {new Date(contest.endTime).toLocaleString()}</span>
           <span>By {contest.createdby?.username}</span>
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '16px' }}>
+      <div className={styles.actionRow}>
         {!finished && (
-          <button
-            onClick={register}
-            disabled={registering}
-            style={{ background: '#1a1aff', color: 'white', border: 'none', borderRadius: '4px', padding: '6px 16px', fontWeight: 600, cursor: 'pointer' }}
-          >
+          <button onClick={register} disabled={registering} className={registering ? styles.registerOff : styles.registerBtn}>
             {registering ? 'Registering...' : 'Register'}
           </button>
         )}
-        {message && <span style={{ fontSize: '13px', color: message.includes('success') ? '#2a9d2a' : '#e03030' }}>{message}</span>}
+        {message && (
+          <span className={message.includes('success') ? styles.msgOk : styles.msgErr}>{message}</span>
+        )}
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', borderBottom: '2px solid #eee', marginBottom: '16px' }}>
+      <div className={styles.tabs}>
         {(['problems', 'standings'] as const).map(t => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            style={{ padding: '8px 16px', border: 'none', background: 'none', fontWeight: 700, fontSize: '13px', cursor: 'pointer', borderBottom: tab === t ? '2px solid #1a1aff' : '2px solid transparent', color: tab === t ? '#1a1aff' : '#555', marginBottom: '-2px', textTransform: 'capitalize' }}
-          >
+          <button key={t} onClick={() => setTab(t)} className={tab === t ? styles.tabActive : styles.tabInactive}>
             {t}
           </button>
         ))}
       </div>
 
       {tab === 'problems' && (
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-          <thead>
-            <tr style={{ background: '#f0f0f0' }}>
-              <th style={th}>#</th>
-              <th style={th}>Problem</th>
-              <th style={th}>Difficulty</th>
-            </tr>
-          </thead>
-          <tbody>
-            {contest.problems.map((cp, i) => (
-              <tr key={cp.label} style={{ background: i % 2 === 0 ? '#fff' : '#f9f9f9', borderBottom: '1px solid #eee' }}>
-                <td style={{ ...td, fontWeight: 700, width: '50px' }}>{cp.label}</td>
-                <td style={td}>
-                  {started ? (
-                    <Link to={`/problems/${cp.problem.code}`} style={{ color: '#1a1aff', textDecoration: 'none', fontWeight: 600 }}>
-                      {cp.problem.title}
-                    </Link>
-                  ) : (
-                    <span style={{ color: '#888' }}>{cp.problem.title}</span>
-                  )}
-                </td>
-                <td style={{ ...td, color: '#888' }}>{cp.problem.difficulty}</td>
+        <>
+          <table className={styles.table}>
+            <thead className={styles.thead}>
+              <tr>
+                <th className={styles.th}>#</th>
+                <th className={styles.th}>Problem</th>
+                <th className={styles.th}>Difficulty</th>
               </tr>
-            ))}
-            {contest.problems.length === 0 && (
-              <tr><td colSpan={3} style={{ padding: '20px', textAlign: 'center', color: '#999' }}>No problems added yet</td></tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {contest.problems.map((cp, i) => (
+                <tr key={cp.label} className={i % 2 === 0 ? styles.rowEven : styles.rowOdd}>
+                  <td className={styles.tdLabel}>{cp.label}</td>
+                  <td className={styles.td}>
+                    {started ? (
+                      <Link to={`/problems/${cp.problem.code}`} className={styles.problemLink}>
+                        {cp.problem.title}
+                      </Link>
+                    ) : (
+                      <span className={styles.problemMuted}>{cp.problem.title}</span>
+                    )}
+                  </td>
+                  <td className={styles.tdMuted}>{cp.problem.difficulty}</td>
+                </tr>
+              ))}
+              {contest.problems.length === 0 && (
+                <tr><td colSpan={3} className={styles.empty}>No problems added yet</td></tr>
+              )}
+            </tbody>
+          </table>
+
+          {isOwner && (
+            <form onSubmit={addProblem} className={styles.addForm}>
+              <input
+                type="text"
+                placeholder="Problem code (e.g. 1A)"
+                value={addForm.problemCode}
+                onChange={e => setAddForm({ ...addForm, problemCode: e.target.value })}
+                required
+                className={styles.addInputWide}
+              />
+              <input
+                type="text"
+                placeholder="Label (e.g. A)"
+                value={addForm.label}
+                onChange={e => setAddForm({ ...addForm, label: e.target.value })}
+                required
+                className={styles.addInputSmall}
+              />
+              <button type="submit" disabled={adding} className={adding ? styles.addBtnOff : styles.addBtn}>
+                {adding ? 'Adding...' : '+ Add Problem'}
+              </button>
+              {addError && <span className={styles.addError}>{addError}</span>}
+            </form>
+          )}
+        </>
       )}
 
       {tab === 'standings' && (
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-          <thead>
-            <tr style={{ background: '#f0f0f0' }}>
-              <th style={th}>#</th>
-              <th style={th}>User</th>
-              <th style={th}>Solved</th>
-              <th style={th}>Penalty</th>
+        <table className={styles.table}>
+          <thead className={styles.thead}>
+            <tr>
+              <th className={styles.th}>#</th>
+              <th className={styles.th}>User</th>
+              <th className={styles.th}>Solved</th>
+              <th className={styles.th}>Penalty</th>
             </tr>
           </thead>
           <tbody>
             {standings.map((s, i) => (
-              <tr key={s.userId} style={{ background: i % 2 === 0 ? '#fff' : '#f9f9f9', borderBottom: '1px solid #eee' }}>
-                <td style={{ ...td, color: '#888' }}>{i + 1}</td>
-                <td style={td}>
-                  <Link to={`/users/${s.username}`} style={{ color: '#1a1aff', textDecoration: 'none', fontWeight: 600 }}>
-                    {s.username}
-                  </Link>
+              <tr key={s.userId} className={i % 2 === 0 ? styles.rowEven : styles.rowOdd}>
+                <td className={styles.tdRank}>{i + 1}</td>
+                <td className={styles.td}>
+                  <Link to={`/users/${s.username}`} className={styles.userLink}>{s.username}</Link>
                 </td>
-                <td style={{ ...td, fontWeight: 700 }}>{s.solved}</td>
-                <td style={{ ...td, color: '#888' }}>{s.penalty}</td>
+                <td className={`${styles.td} font-bold`}>{s.solved}</td>
+                <td className={styles.tdMuted}>{s.penalty}</td>
               </tr>
             ))}
             {standings.length === 0 && (
-              <tr><td colSpan={4} style={{ padding: '20px', textAlign: 'center', color: '#999' }}>No submissions yet</td></tr>
+              <tr><td colSpan={4} className={styles.empty}>No submissions yet</td></tr>
             )}
           </tbody>
         </table>
@@ -157,6 +232,3 @@ export default function Contest() {
     </div>
   )
 }
-
-const th: React.CSSProperties = { padding: '8px 12px', textAlign: 'left', fontWeight: 700, fontSize: '12px', color: '#555', borderBottom: '2px solid #ddd' }
-const td: React.CSSProperties = { padding: '10px 12px' }

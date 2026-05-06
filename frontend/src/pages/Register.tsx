@@ -2,10 +2,23 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import api from '../api/client'
 
+const styles = {
+  wrapper:      'max-w-sm mx-auto mt-16',
+  title:        'text-xl font-bold mb-1',
+  subtitle:     'text-sm text-gray-500 mb-5',
+  error:        'bg-red-50 border border-red-200 text-red-600 text-sm px-3 py-2 rounded mb-4',
+  form:         'flex flex-col gap-3',
+  fieldWrapper: 'flex flex-col gap-1',
+  label:        'text-sm font-semibold capitalize',
+  input:        'w-full border border-gray-300 rounded px-2 py-1.5 text-sm outline-none',
+  submitBtn:    'mt-1 py-2 bg-blue-700 text-white font-semibold rounded text-sm cursor-pointer border-none',
+  submitBtnOff: 'mt-1 py-2 bg-gray-400 text-white font-semibold rounded text-sm cursor-default border-none',
+}
+
 export default function Register() {
   const navigate = useNavigate()
-  const [form, setForm] = useState({ username: '', email: '', password: '' })
-  const [error, setError] = useState('')
+  const [form, setForm]       = useState({ username: '', email: '', password: '' })
+  const [error, setError]     = useState('')
   const [loading, setLoading] = useState(false)
 
   const submit = async (e: React.FormEvent) => {
@@ -26,37 +39,28 @@ export default function Register() {
   }
 
   return (
-    <div style={{ maxWidth: '380px', margin: '60px auto' }}>
-      <h2 style={{ marginBottom: '4px' }}>Register</h2>
-      <p style={{ color: '#888', fontSize: '13px', marginBottom: '20px' }}>
+    <div className={styles.wrapper}>
+      <h2 className={styles.title}>Register</h2>
+      <p className={styles.subtitle}>
         Already have an account? <Link to="/login">Login</Link>
       </p>
 
-      {error && (
-        <div style={{ background: '#fff0f0', border: '1px solid #f5c6c6', color: '#c0392b', padding: '8px 12px', borderRadius: '4px', fontSize: '13px', marginBottom: '16px' }}>
-          {error}
-        </div>
-      )}
+      {error && <div className={styles.error}>{error}</div>}
 
-      <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <form onSubmit={submit} className={styles.form}>
         {(['username', 'email', 'password'] as const).map(field => (
-          <div key={field} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <label style={{ fontSize: '13px', fontWeight: 600, textTransform: 'capitalize' }}>{field}</label>
+          <div key={field} className={styles.fieldWrapper}>
+            <label className={styles.label}>{field}</label>
             <input
+              className={styles.input}
               type={field === 'password' ? 'password' : field === 'email' ? 'email' : 'text'}
               value={form[field]}
               onChange={e => setForm({ ...form, [field]: e.target.value })}
               required
-              style={{ width: '100%' }}
             />
           </div>
         ))}
-
-        <button
-          type="submit"
-          disabled={loading}
-          style={{ marginTop: '4px', padding: '8px', background: loading ? '#999' : '#1a1aff', color: 'white', border: 'none', borderRadius: '4px', fontWeight: 600, fontSize: '14px', cursor: loading ? 'default' : 'pointer' }}
-        >
+        <button type="submit" disabled={loading} className={loading ? styles.submitBtnOff : styles.submitBtn}>
           {loading ? 'Registering...' : 'Register'}
         </button>
       </form>
